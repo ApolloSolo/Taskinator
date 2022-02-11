@@ -229,7 +229,7 @@ const saveTasks = function() {
 const loadTasks = function(){
   const data = localStorage.getItem("tasks");
   tasks = JSON.parse(data);
-  
+  console.log(tasks);
   if(tasks === null){
     tasks = [];
     return false;
@@ -275,3 +275,4 @@ formEl.addEventListener("submit", taskFormHandler);
 pageContentEl.addEventListener('click', taskButtonHandler);
 
 pageContentEl.addEventListener('change', taskStatusChangeHandler);
+loadTasks();
