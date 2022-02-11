@@ -230,7 +230,10 @@ const loadTasks = function(){
   const data = localStorage.getItem("tasks");
   tasks = JSON.parse(data);
   
-
+  if(tasks === null){
+    tasks = [];
+    return false;
+  }
   for(let i = 0; i < tasks.length; i++){
     tasks[i].id = taskIdCounter;
   
@@ -272,5 +275,3 @@ formEl.addEventListener("submit", taskFormHandler);
 pageContentEl.addEventListener('click', taskButtonHandler);
 
 pageContentEl.addEventListener('change', taskStatusChangeHandler);
-
-loadTasks();
