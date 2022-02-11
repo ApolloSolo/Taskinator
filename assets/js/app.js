@@ -5,6 +5,8 @@ const tasksInProgressEl = document.querySelector("#tasks-in-progress");
 const tasksCompletedEl = document.querySelector("#tasks-completed");
 let taskIdCounter = 0;
 
+let tasks = []
+
 const taskFormHandler = function (event) {
   event.preventDefault();
   const taskNameInput = document.querySelector('input[name="task-name"]').value;
@@ -27,7 +29,8 @@ const taskFormHandler = function (event) {
     else{
       const taskDataObj = {
         name: taskNameInput,
-        type: taskTypeInput
+        type: taskTypeInput,
+        status: "to do"
       }
       createTaskEl(taskDataObj);
     }
@@ -61,6 +64,12 @@ const createTaskEl = function (taskDataObj) {
 
   // add entire list item to list
   tasksToDoEl.appendChild(listItemEl);
+
+  taskDataObj.id = taskIdCounter;
+
+  tasks.push(taskDataObj);
+
+  saveTasks();
 
   taskIdCounter++;
 }
@@ -146,18 +155,40 @@ const completeEditTask = function(taskName, taskType, taskId){
   taskSelected.querySelector("h3.task-name").textContent = taskName;
   taskSelected.querySelector("span.task-type").textContent = taskType;
 
+  // Find the obj that was edited and update it with new data
+  for(let i = 0; i < tasks.length; i++){
+    if(tasks[i].id === parseInt(taskId)){
+      tasks[i].name = taskName;
+      tasks[i].type = taskType;
+    }
+  }
+
+  saveTasks();
+
   alert("Task Updated!");
 
   formEl.removeAttribute("data-task-id");
   document.querySelector("#save-task").textContent = "Add Task";
 
-}
+};
 
 //Delete task
 
 const deletTask = function(taskId){
   let taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
   taskSelected.remove();
+
+   const updatedTaskArray = [];
+
+   for(let i = 0; i < tasks.length; i++){
+     if(tasks[i].id !== parseInt(taskId)){
+       updatedTaskArray.push(tasks[i]);
+     }
+   }
+
+   tasks = updatedTaskArray;
+
+   saveTasks();
 }
 
 //Change our task catigories
@@ -179,7 +210,60 @@ const taskStatusChangeHandler = function(event) {
   else if (statusValue === "completed") {
     tasksCompletedEl.appendChild(taskSelected);
   }
+
+  for(let i = 0; i < tasks.length; i++){
+    if(tasks[i].id === parseInt(taskId)){
+      tasks[i].status = statusValue;
+    }
+  }
+
+  saveTasks();
 };
+
+//Local Storage
+
+const saveTasks = function() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+const loadTasks = function(){
+  const data = localStorage.getItem("tasks");
+  tasks = JSON.parse(data);
+  
+
+  for(let i = 0; i < tasks.length; i++){
+    tasks[i].id = taskIdCounter;
+  
+    const listItemEl = document.createElement('li');
+    listItemEl.className = "task-item";
+    listItemEl.setAttribute("data-task-id", tasks[i].id);
+    
+    //create div
+    const taskInfoEl = document.createElement('div');
+    taskInfoEl.className = "taskInfo";
+    taskInfoEl.innerHTML = "<h3 class='task-name'>" + tasks[i].name + "</h3><span class='task-type'>" + tasks[i].type + "</span>";
+    listItemEl.append(taskInfoEl);
+
+    const taskActionsEl = createTaskActions(tasks[i].id); //returns action container with edit delete and select. id is used to set thair attribute id values.
+    listItemEl.append(taskActionsEl);
+    console.log(listItemEl);
+
+    if(tasks[i].status === "to do"){
+      listItemEl.querySelector("select[name='status-change']").selectedIndex = 0;
+      tasksToDoEl.appendChild(listItemEl);
+    }
+    else if(tasks[i].status === "in progress"){
+      listItemEl.querySelector("select[name='status-change']").selectedIndex = 1;
+      tasksInProgressEl.appendChild(listItemEl);
+    }
+    else if(tasks[i].status === "completed"){
+      listItemEl.querySelector("select[name='status-change']").selectedIndex = 2;
+      tasksCompletedEl.appendChild(listItemEl);
+    }
+
+    taskIdCounter++;
+  }
+}
 
 //Event listener
 
@@ -188,3 +272,5 @@ formEl.addEventListener("submit", taskFormHandler);
 pageContentEl.addEventListener('click', taskButtonHandler);
 
 pageContentEl.addEventListener('change', taskStatusChangeHandler);
+
+loadTasks();
